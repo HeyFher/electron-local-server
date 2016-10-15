@@ -11,8 +11,26 @@ const indexPath = `file://${__dirname}/index.html`;
 
 const express = require('express');
 const appExpress = express();
-const io = require('socket.io')();
+const server = require('http').createServer(appExpress);
+const io = require('socket.io')(server);
 const os = require('os');
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/* # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+//* SocketIO
+
+var users = 0;
+io.on('connection', function (socket) {
+    users += 1;
+    socket.on('chat message', function(msg){
+        io.emit('chat message', {msg, users});
+    });
+    socket.on('disconnect', function () {
+        users -= 1;
+        io.emit('chat message', {users});
+    });
+});
 
 
 
@@ -20,11 +38,11 @@ const os = require('os');
 /* # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # */
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 //* Create LAN server
-//* e.g http://192.168.1.66:9821/
+
 const port = 9823;
 
 function createLanServer() {
-    appExpress.listen(port);
+    server.listen(port);
     appExpress.use(express.static(__dirname + '/public'));
     appExpress.get('/', (req, res) => {
         res.sendfile(`${__dirname}/server.html`);
